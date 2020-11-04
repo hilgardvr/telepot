@@ -6,6 +6,13 @@ import os
 import requests
 import json
 
+class Commands:
+    ping = "ping"
+    ip = "ip"
+    price = "price"
+    rpc_gbi = "rpc_gbi"
+    telepot_id = "telepot_id"
+
 def get_price(chat_id):
     url = "https://blockchain.info/ticker"
     r = requests.get(url)
@@ -36,21 +43,32 @@ def rpc(chat_id, msg):
     bot.sendMessage(chat_id, "RPC: " + msg)
     f.close()
 
+def get_help(chat_id):
+    options = vars(Commands)
+    options_list = ""
+    for option in options:
+        if option != "__module__" and option != "__doc__":
+            options_list += "    " + option + "\n"
+    bot.sendMessage(chat_id, "Options:\n" + options_list)
+
 def handle_msg(msg):
     content_type, chat_type, chat_id = telepot.glance(msg)
     if content_type == 'text':
         command = (msg['text']).lower()
         print('Got command: %s' % command)
-        if command == 'ping':
+        if command == Commands.ping:
             ping(chat_id)
-        elif command == 'ip':
+        elif command == Commands.ip:
             get_pi(chat_id)
-        elif command == 'price':
+        elif command == Commands.price:
             get_price(chat_id)
-        elif command == 'telepotid':
+        elif command == Commands.telepot_id:
             telepot_id(chat_id)
-        elif command == "rpc_gbi":
+        elif command == Commands.rpc_gbi:
             rpc(chat_id, command)
+        else:
+            bot.sendMessage(chat_id, "I don't understand: " + command)
+            get_help(chat_id)
 
 root_id = os.environ['TELEPOT']
 bot = telepot.Bot(root_id)
