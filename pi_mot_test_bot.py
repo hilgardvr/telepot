@@ -12,6 +12,7 @@ class Commands:
     price = "price"
     rpc_gbi = "rpc_gbi"
     telepot_id = "telepot_id"
+    rpc_var = "rpc"
 
 def get_price(chat_id):
     url = "https://blockchain.info/ticker"
@@ -34,11 +35,11 @@ def ping(chat_id):
 def telepot_id(chat_id):
     bot.sendMessage(chat_id, "rootId: " + root_id)
 
-def rpc(chat_id, msg):
+def rpc(chat_id, rpc):
     user = os.environ['RPC_USER']
     pwd = os.environ['RPC_PWD']
-    os.system("/usr/bin/curl --user %s:%s --data-binary '{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"getblockchaininfo\", \"params\": [] }' -H 'content-type: text/plain;' http://127.0.0.1:8332/ > /tmp/msg" %(user, pwd))
-    f = open("/tmp/msg", "r")
+    os.system("/usr/bin/curl --user %s:%s --data-binary '{\"jsonrpc\": \"1.0\", \"id\":\"telepot_rpc_curl\", \"method\": \"%s\", \"params\": [] }' -H 'content-type: text/plain;' http://127.0.0.1:8332/ > /tmp/rpc" %(user, pwd, rpc))
+    f = open("/tmp/rpc", "r")
     msg = f.read()
     bot.sendMessage(chat_id, "RPC: " + msg)
     f.close()
@@ -54,7 +55,8 @@ def get_help(chat_id):
 def handle_msg(msg):
     content_type, chat_type, chat_id = telepot.glance(msg)
     if content_type == 'text':
-        command = (msg['text']).lower()
+        commands = (msg['text']).lower().split("_")
+        command = commands[0]
         print('Got command: %s' % command)
         if command == Commands.ping:
             ping(chat_id)
@@ -64,8 +66,8 @@ def handle_msg(msg):
             get_price(chat_id)
         elif command == Commands.telepot_id:
             telepot_id(chat_id)
-        elif command == Commands.rpc_gbi:
-            rpc(chat_id, command)
+        elif command == Commands.rpc_var and len(commands) == 2:
+            rpc(chat_id, commands[1].replace('_', ''))
         else:
             bot.sendMessage(chat_id, "I don't understand: " + command)
             get_help(chat_id)
@@ -76,4 +78,4 @@ bot.message_loop(handle_msg)
 print('Listening')
 
 while 1:
-    time.sleep(10)
+    time.sleep(5)
